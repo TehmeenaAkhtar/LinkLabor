@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>LinkLabour Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+          --green:#1A6B4A; --green-light:#2D9E6B; --green-dim:#E8F5EE;
+          --red:#DC2626; --red-dim:#FEE2E2; --amber:#D97706; --amber-dim:#FEF3C7;
+          --blue:#1D4ED8; --blue-dim:#DBEAFE;
+          --bg:#F0F2F0; --card:#FFFFFF; --sidebar:#0F2D1E;
+          --sidebar-text:rgba(255,255,255,0.6); --sidebar-active:rgba(255,255,255,0.08);
+          --border:#E5E7EB; --text:#111827; --muted:#6B7280;
+          --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace;
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+        /* LOGIN */
+        #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--sidebar)}
+        .login-box{background:#1a3d2b;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:48px 40px;width:380px}
+        .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+        .login-logo-icon{width:40px;height:40px;background:var(--green);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+        .login-logo span{color:#fff;font-size:20px;font-weight:600}
+        .login-subtitle{color:var(--sidebar-text);font-size:13px;margin-bottom:28px}
+        .login-field{margin-bottom:16px}
+        .login-field label{display:block;color:rgba(255,255,255,0.5);font-size:12px;margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase}
+        .login-field input{width:100%;padding:11px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-family:var(--font);font-size:14px;outline:none;transition:border-color 0.2s}
+        .login-field input:focus{border-color:var(--green-light)}
+        .login-btn{width:100%;padding:12px;background:var(--green);border:none;border-radius:8px;color:#fff;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:background 0.2s}
+        .login-btn:hover{background:var(--green-light)}
+        .login-error{color:#f87171;font-size:13px;margin-top:10px;display:none}
+        /* LAYOUT */
+        #app{display:none;height:100vh;overflow:hidden}
+        #app.visible{display:flex}
+        .sidebar{width:240px;min-width:240px;background:var(--sidebar);display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+        .sidebar-header{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
+        .sidebar-brand{display:flex;align-items:center;gap:10px}
+        .sidebar-brand-icon{width:34px;height:34px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+        .sidebar-brand span{color:#fff;font-size:16px;font-weight:600}
+        .sidebar-tag{color:var(--sidebar-text);font-size:11px;margin-top:4px;font-family:var(--mono)}
+        .sidebar-nav{padding:16px 12px;flex:1}
+        .nav-section{color:rgba(255,255,255,0.25);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:0 8px;margin:16px 0 6px}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:all 0.15s;color:var(--sidebar-text);font-size:14px;margin-bottom:2px}
+        .nav-item:hover{background:var(--sidebar-active);color:#fff}
+        .nav-item.active{background:var(--green);color:#fff}
+        .nav-item .icon{font-size:16px;width:20px;text-align:center}
+        .nav-badge{margin-left:auto;background:var(--green-light);color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;font-family:var(--mono)}
+        .sidebar-footer{padding:16px 12px;border-top:1px solid rgba(255,255,255,0.06)}
+        .logout-btn{display:flex;align-items:center;gap:8px;width:100%;padding:9px 10px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--sidebar-text);font-family:var(--font);font-size:13px;cursor:pointer;transition:all 0.15s}
+        .logout-btn:hover{background:rgba(220,38,38,0.15);border-color:rgba(220,38,38,0.3);color:#f87171}
+        /* MAIN */
+        .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+        .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+        .topbar-title{font-size:17px;font-weight:600}
+        .admin-pill{display:flex;align-items:center;gap:7px;padding:6px 12px;background:var(--green-dim);border-radius:20px;font-size:13px;font-weight:500;color:var(--green)}
+        .admin-dot{width:7px;height:7px;background:var(--green);border-radius:50%}
+        .content{flex:1;overflow-y:auto;padding:28px}
+        /* PAGES */
+        .page{display:none}
+        .page.active{display:block}
+        /* STATS */
+        .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+        .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;align-items:center;gap:16px;transition:box-shadow 0.2s}
+        .stat-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06)}
+        .stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+        .stat-icon.green{background:var(--green-dim)}
+        .stat-icon.red{background:var(--red-dim)}
+        .stat-icon.blue{background:var(--blue-dim)}
+        .stat-icon.amber{background:var(--amber-dim)}
+        .stat-label{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:4px}
+        .stat-value{font-size:26px;font-weight:600;font-family:var(--mono)}
+        /* SECTION */
+        .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+        .section-title{font-size:15px;font-weight:600}
+        .search-box{padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;color:var(--text);outline:none;width:260px;transition:border-color 0.2s}
+        .search-box:focus{border-color:var(--green)}
+        /* TABLE */
+        .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+        table{width:100%;border-collapse:collapse}
+        thead{background:#F9FAFB}
+        th{padding:11px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border)}
+        td{padding:13px 16px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+        tr:last-child td{border-bottom:none}
+        tr:hover td{background:#FAFAFA}
+        .avatar{width:34px;height:34px;border-radius:50%;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--green);flex-shrink:0}
+        .cell-name{display:flex;align-items:center;gap:10px}
+        .name-sub{font-size:11px;color:var(--muted);margin-top:1px}
+        /* BADGES */
+        .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+        .badge.green{background:var(--green-dim);color:var(--green)}
+        .badge.red{background:var(--red-dim);color:var(--red)}
+        .badge.amber{background:var(--amber-dim);color:var(--amber)}
+        .badge.blue{background:var(--blue-dim);color:var(--blue)}
+        .badge.gray{background:#F3F4F6;color:#6B7280}
+        /* BTNS */
+        .btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all 0.15s}
+        .btn-view{background:var(--blue-dim);color:var(--blue)}
+        .btn-view:hover{background:#BFDBFE}
+        .btn-del{background:var(--red-dim);color:var(--red)}
+        .btn-del:hover{background:#FECACA}
+        .btn-verify{background:var(--green-dim);color:var(--green)}
+        .btn-verify:hover{background:#BBF7D0}
+        .actions{display:flex;gap:6px;flex-wrap:wrap}
+        /* MODAL */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+        .modal-overlay.open{display:flex}
+        .modal{background:var(--card);border-radius:16px;width:620px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+        .modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--card);z-index:1}
+        .modal-title{font-size:16px;font-weight:600}
+        .modal-close{width:30px;height:30px;border:none;background:#F3F4F6;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+        .modal-close:hover{background:var(--red-dim);color:var(--red)}
+        .modal-body{padding:24px}
+        .modal-profile{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+        .modal-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;color:var(--green);flex-shrink:0}
+        .modal-name{font-size:18px;font-weight:600}
+        .modal-meta{font-size:13px;color:var(--muted);margin-top:3px}
+        .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .detail-item label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px}
+        .detail-item span{font-size:14px;font-weight:500}
+        .detail-full{grid-column:1 / -1}
+        .doc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+        .doc-item{text-align:center}
+        .doc-item label{font-size:11px;color:var(--muted);display:block;margin-bottom:6px;font-weight:500}
+        .doc-placeholder{height:80px;display:flex;align-items:center;justify-content:center;background:#F9FAFB;border-radius:8px;border:1px solid var(--border);font-size:11px;color:var(--muted)}
+        .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+        /* CONFIRM */
+        .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:2000}
+        .confirm-overlay.open{display:flex}
+        .confirm-box{background:var(--card);border-radius:14px;padding:28px;width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
+        .confirm-icon{font-size:36px;margin-bottom:12px}
+        .confirm-title{font-size:17px;font-weight:600;margin-bottom:8px}
+        .confirm-msg{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+        .confirm-btns{display:flex;gap:10px;justify-content:center}
+        .btn-cancel{background:#F3F4F6;color:var(--text);padding:9px 20px;font-size:13px;border-radius:8px;border:none;cursor:pointer;font-family:var(--font)}
+        .btn-cancel:hover{background:#E5E7EB}
+        .btn-confirm-del{background:var(--red);color:#fff;padding:9px 20px;font-size:13px;border-radius:8px;border:none;cursor:pointer;font-family:var(--font);font-weight:600}
+        .btn-confirm-del:hover{background:#B91C1C}
+        /* TOAST */
+        .toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:#111827;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,0.2);transform:translateY(80px);transition:transform 0.3s;pointer-events:none}
+        .toast.show{transform:translateY(0)}
+        .toast.success{border-left:3px solid var(--green-light)}
+        .toast.error{border-left:3px solid var(--red)}
+        /* MISC */
+        .empty{text-align:center;padding:60px 20px;color:var(--muted)}
+        .empty-icon{font-size:40px;margin-bottom:12px}
+        .empty p{font-size:14px}
+        .loading{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+        .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;margin-right:8px;vertical-align:middle}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+        .panel-header{padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between}
+        .list-item{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;font-size:13px}
+        .list-item:last-child{border-bottom:none}
+        .list-item-info{flex:1}
+        .list-item-name{font-weight:500}
+        .list-item-sub{font-size:11px;color:var(--muted);margin-top:2px}
+        ::-webkit-scrollbar{width:5px;height:5px}
+        ::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px}
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+    <div class="login-box">
+        <div class="login-logo">
+            <div class="login-logo-icon">🔗</div>
+            <span>LinkLabour</span>
+        </div>
+        <div class="login-subtitle">Admin Control Panel — Restricted Access</div>
+        <div class="login-field">
+            <label>Username</label>
+            <input type="text" id="login-user" placeholder="admin" autocomplete="off"/>
+        </div>
+        <div class="login-field">
+            <label>Password</label>
+            <input type="password" id="login-pass" placeholder="••••••••"/>
+        </div>
+        <button class="login-btn" onclick="doLogin()">Sign In</button>
+        <div class="login-error" id="login-err">❌ Invalid username or password</div>
+    </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-icon">🔗</div>
+                <span>LinkLabour</span>
+            </div>
+            <div class="sidebar-tag">admin panel v1.0</div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Overview</div>
+            <div class="nav-item active" onclick="showPage('dashboard',this)">
+                <span class="icon">📊</span> Dashboard
+            </div>
+            <div class="nav-section">Management</div>
+            <div class="nav-item" onclick="showPage('workers',this)">
+                <span class="icon">👷</span> Workers
+                <span class="nav-badge" id="workers-count">0</span>
+            </div>
+            <div class="nav-item" onclick="showPage('customers',this)">
+                <span class="icon">🙋</span> Customers
+                <span class="nav-badge" id="customers-count">0</span>
+            </div>
+            <div class="nav-item" onclick="showPage('jobs',this)">
+                <span class="icon">💼</span> Jobs
+                <span class="nav-badge" id="jobs-count">0</span>
+            </div>
+            <div class="nav-section">Finance</div>
+            <div class="nav-item" onclick="showPage('earnings',this)">
+                <span class="icon">💰</span> Platform Earnings
+                <span class="nav-badge" id="earnings-count">0</span>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="logout-btn" onclick="doLogout()">🚪 Sign Out</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="topbar-title" id="page-title">Dashboard</div>
+            <div class="admin-pill"><div class="admin-dot"></div>Administrator</div>
+        </div>
+        <div class="content">
+
+            <!-- DASHBOARD -->
+            <div class="page active" id="page-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-icon green">👷</div><div><div class="stat-label">Total Workers</div><div class="stat-value" id="stat-workers">—</div></div></div>
+                    <div class="stat-card"><div class="stat-icon blue">🙋</div><div><div class="stat-label">Total Customers</div><div class="stat-value" id="stat-customers">—</div></div></div>
+                    <div class="stat-card"><div class="stat-icon amber">💼</div><div><div class="stat-label">Open Jobs</div><div class="stat-value" id="stat-open">—</div></div></div>
+                    <div class="stat-card"><div class="stat-icon red">✅</div><div><div class="stat-label">Assigned Jobs</div><div class="stat-value" id="stat-assigned">—</div></div></div>
+                </div>
+                <div class="two-col">
+                    <div class="panel">
+                        <div class="panel-header">Recent Workers</div>
+                        <div id="recent-workers"><div class="loading"><span class="spinner"></span>Loading...</div></div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">Recent Customers</div>
+                        <div id="recent-customers"><div class="loading"><span class="spinner"></span>Loading...</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORKERS -->
+            <div class="page" id="page-workers">
+                <div class="section-header">
+                    <div class="section-title">All Workers</div>
+                    <input class="search-box" type="text" placeholder="🔍  Search name, skill, city..." oninput="filterWorkers(this.value)"/>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Worker</th><th>Skill</th><th>City</th><th>Phone</th><th>Availability</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+                        <tbody id="workers-tbody"><tr><td colspan="8"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- CUSTOMERS -->
+            <div class="page" id="page-customers">
+                <div class="section-header">
+                    <div class="section-title">All Customers</div>
+                    <input class="search-box" type="text" placeholder="🔍  Search name, city, phone..." oninput="filterCustomers(this.value)"/>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Customer</th><th>CNIC</th><th>Phone</th><th>City</th><th>Joined</th><th>Actions</th></tr></thead>
+                        <tbody id="customers-tbody"><tr><td colspan="6"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- JOBS -->
+            <div class="page" id="page-jobs">
+                <div class="section-header">
+                    <div class="section-title">All Jobs</div>
+                    <input class="search-box" type="text" placeholder="🔍  Search title, location..." oninput="filterJobs(this.value)"/>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Job Title</th><th>Budget</th><th>Location</th><th>Status</th><th>Posted By</th><th>Posted On</th><th>Actions</th></tr></thead>
+                        <tbody id="jobs-tbody"><tr><td colspan="7"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- EARNINGS -->
+            <div class="page" id="page-earnings">
+                <div class="section-header">
+                    <div class="section-title">Platform Earnings Overview</div>
+                </div>
+                <div class="stats-grid" style="grid-template-columns: repeat(2,1fr); margin-bottom: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-icon green">💰</div>
+                        <div>
+                            <div class="stat-label">Total Transacted</div>
+                            <div class="stat-value" id="earn-total">—</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue">✅</div>
+                        <div>
+                            <div class="stat-label">Completed Transactions</div>
+                            <div class="stat-value" id="earn-count">—</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Job Title</th><th>Worker</th><th>Customer</th><th>Amount</th><th>Date</th></tr></thead>
+                        <tbody id="earnings-tbody"><tr><td colspan="5"><div class="loading"><span class="spinner"></span>Loading...</div></td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- WORKER MODAL -->
+<div class="modal-overlay" id="worker-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Worker Profile</div>
+            <button class="modal-close" onclick="closeModal('worker-modal')">✕</button>
+        </div>
+        <div class="modal-body" id="worker-modal-body"></div>
+        <div class="modal-footer" id="worker-modal-footer"></div>
+    </div>
+</div>
+
+<!-- CUSTOMER MODAL -->
+<div class="modal-overlay" id="customer-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">Customer Profile</div>
+            <button class="modal-close" onclick="closeModal('customer-modal')">✕</button>
+        </div>
+        <div class="modal-body" id="customer-modal-body"></div>
+        <div class="modal-footer" id="customer-modal-footer"></div>
+    </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="confirm-overlay" id="confirm-dialog">
+    <div class="confirm-box">
+        <div class="confirm-icon">🗑️</div>
+        <div class="confirm-title">Confirm Delete</div>
+        <div class="confirm-msg" id="confirm-msg">This cannot be undone.</div>
+        <div class="confirm-btns">
+            <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+            <button class="btn-confirm-del" id="confirm-ok">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+    const BASE = 'http://localhost:3000';
+    const API  = BASE + '/api/admin';
+    const CREDS = { user:'admin', pass:'linklabour123' };
+
+    let allWorkers=[], allCustomers=[], allJobs=[];
+
+    // ── AUTH ──
+    function doLogin(){
+      const u=document.getElementById('login-user').value.trim();
+      const p=document.getElementById('login-pass').value.trim();
+      if(u===CREDS.user && p===CREDS.pass){
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('app').classList.add('visible');
+        loadAll();
+      } else {
+        document.getElementById('login-err').style.display='block';
+      }
+    }
+    function doLogout(){
+      document.getElementById('app').classList.remove('visible');
+      document.getElementById('login-screen').style.display='flex';
+      document.getElementById('login-user').value='';
+      document.getElementById('login-pass').value='';
+    }
+    document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+    // ── NAVIGATION ──
+    const titles={dashboard:'Dashboard',workers:'Workers',customers:'Customers',jobs:'Jobs',earnings:'Platform Earnings'};
+    function showPage(name,el){
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+      document.getElementById('page-'+name).classList.add('active');
+      el.classList.add('active');
+      document.getElementById('page-title').textContent=titles[name];
+    }
+
+    // ── LOAD ──
+    async function loadAll(){
+      await Promise.all([loadWorkers(),loadCustomers(),loadJobs()]);
+      renderDashboard();
+      renderEarnings();
+    }
+
+    async function loadWorkers(){
+      try{
+        const r=await fetch(API+'/workers');
+        allWorkers=await r.json();
+        renderWorkers(allWorkers);
+        document.getElementById('workers-count').textContent=allWorkers.length;
+        document.getElementById('stat-workers').textContent=allWorkers.length;
+      }catch(e){console.error('workers:',e)}
+    }
+    async function loadCustomers(){
+      try{
+        const r=await fetch(API+'/customers');
+        allCustomers=await r.json();
+        renderCustomers(allCustomers);
+        document.getElementById('customers-count').textContent=allCustomers.length;
+        document.getElementById('stat-customers').textContent=allCustomers.length;
+      }catch(e){console.error('customers:',e)}
+    }
+    async function loadJobs(){
+      try{
+        const r=await fetch(API+'/jobs');
+        allJobs=await r.json();
+        renderJobs(allJobs);
+        document.getElementById('jobs-count').textContent=allJobs.length;
+        document.getElementById('stat-open').textContent=allJobs.filter(j=>j.status==='open').length;
+        document.getElementById('stat-assigned').textContent=allJobs.filter(j=>j.status==='assigned').length;
+      }catch(e){console.error('jobs:',e)}
+    }
+
+    // ── DASHBOARD ──
+    function renderDashboard(){
+      const rw=document.getElementById('recent-workers');
+      rw.innerHTML=!allWorkers.length
+        ?'<div class="empty"><div class="empty-icon">👷</div><p>No workers yet</p></div>'
+        :allWorkers.slice(0,5).map(w=>`
+          <div class="list-item">
+            <div class="avatar">${w.fullName.charAt(0).toUpperCase()}</div>
+            <div class="list-item-info">
+              <div class="list-item-name">${w.fullName}</div>
+              <div class="list-item-sub">${w.skill||'N/A'} • ${w.city||'N/A'}</div>
+            </div>
+            <span class="badge ${w.worker_form_completed?'green':'amber'}">${w.worker_form_completed?'Verified':'Pending'}</span>
+          </div>`).join('');
+
+      const rc=document.getElementById('recent-customers');
+      rc.innerHTML=!allCustomers.length
+        ?'<div class="empty"><div class="empty-icon">🙋</div><p>No customers yet</p></div>'
+        :allCustomers.slice(0,5).map(c=>`
+          <div class="list-item">
+            <div class="avatar">${c.fullName.charAt(0).toUpperCase()}</div>
+            <div class="list-item-info">
+              <div class="list-item-name">${c.fullName}</div>
+              <div class="list-item-sub">${c.city||'N/A'} • ${c.phone}</div>
+            </div>
+            <span class="badge blue">Customer</span>
+          </div>`).join('');
+    }
+
+    // ── RENDER WORKERS ──
+    function renderWorkers(data){
+      const tb=document.getElementById('workers-tbody');
+      if(!data.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">👷</div><p>No workers found</p></div></td></tr>`;return}
+      tb.innerHTML=data.map(w=>`
+        <tr>
+          <td><div class="cell-name">
+            <div class="avatar">${w.fullName.charAt(0).toUpperCase()}</div>
+            <div><div style="font-weight:500">${w.fullName}</div><div class="name-sub">#${w.id} • ${w.cnic}</div></div>
+          </div></td>
+          <td><span class="badge green">${w.skill||'—'}</span></td>
+          <td>${w.city||'—'}</td>
+          <td style="font-family:var(--mono);font-size:12px">${w.phone}</td>
+          <td>${w.availableHours||'—'}</td>
+          <td><span class="badge ${w.worker_form_completed?'green':'amber'}">${w.worker_form_completed?'✓ Verified':'⏳ Pending'}</span></td>
+          <td style="font-size:11px;color:var(--muted)">${fmtDate(w.created_at)}</td>
+          <td><div class="actions">
+            <button class="btn btn-view" onclick="viewWorker(${w.id})">👁 View</button>
+            <button class="btn btn-verify" onclick="toggleVerify(${w.id},${w.worker_form_completed?1:0})">${w.worker_form_completed?'🔒 Unverify':'✓ Verify'}</button>
+            <button class="btn btn-del" onclick="confirmDelete('worker',${w.id},'${esc(w.fullName)}')">🗑 Delete</button>
+          </div></td>
+        </tr>`).join('');
+    }
+
+    // ── RENDER CUSTOMERS ──
+    function renderCustomers(data){
+      const tb=document.getElementById('customers-tbody');
+      if(!data.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🙋</div><p>No customers found</p></div></td></tr>`;return}
+      tb.innerHTML=data.map(c=>`
+        <tr>
+          <td><div class="cell-name">
+            <div class="avatar">${c.fullName.charAt(0).toUpperCase()}</div>
+            <div><div style="font-weight:500">${c.fullName}</div><div class="name-sub">#${c.id}</div></div>
+          </div></td>
+          <td style="font-family:var(--mono);font-size:12px">${c.cnic}</td>
+          <td style="font-family:var(--mono);font-size:12px">${c.phone}</td>
+          <td>${c.city||'—'}</td>
+          <td style="font-size:11px;color:var(--muted)">${fmtDate(c.created_at)}</td>
+          <td><div class="actions">
+            <button class="btn btn-view" onclick="viewCustomer(${c.id})">👁 View</button>
+            <button class="btn btn-del" onclick="confirmDelete('customer',${c.id},'${esc(c.fullName)}')">🗑 Delete</button>
+          </div></td>
+        </tr>`).join('');
+    }
+
+    // ── RENDER JOBS ──
+    function renderJobs(data){
+      const tb=document.getElementById('jobs-tbody');
+      if(!data.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty"><div class="empty-icon">💼</div><p>No jobs found</p></div></td></tr>`;return}
+      tb.innerHTML=data.map(j=>`
+        <tr>
+          <td>
+            <div style="font-weight:500">${j.title}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">${j.description?j.description.substring(0,55)+'…':''}</div>
+          </td>
+          <td style="font-family:var(--mono);font-weight:600;color:var(--green)">PKR ${Number(j.budget).toLocaleString()}</td>
+          <td>${j.location||'—'}</td>
+          <td><span class="badge ${j.status==='open'?'amber':'green'}">${j.status==='open'?'🟡 Open':'✅ Assigned'}</span></td>
+          <td>${j.customerName||'—'}</td>
+          <td style="font-size:11px;color:var(--muted)">${fmtDate(j.created_at)}</td>
+          <td><div class="actions">
+            <button class="btn btn-del" onclick="confirmDelete('job',${j.id},'${esc(j.title)}')">🗑 Delete</button>
+          </div></td>
+        </tr>`).join('');
+    }
+
+    // ── RENDER EARNINGS (computed client-side from assigned jobs) ──
+    function renderEarnings(){
+      const tb=document.getElementById('earnings-tbody');
+      const completed=allJobs.filter(j=>j.status==='assigned');
+      const total=completed.reduce((sum,j)=>sum+Number(j.budget||0),0);
+
+      document.getElementById('earn-total').textContent='PKR '+total.toLocaleString();
+      document.getElementById('earn-count').textContent=completed.length;
+      document.getElementById('earnings-count').textContent=completed.length;
+
+      if(!completed.length){
+        tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="empty-icon">💰</div><p>No completed transactions yet</p></div></td></tr>`;
+        return;
+      }
+      tb.innerHTML=completed.map(j=>`
+        <tr>
+          <td style="font-weight:500">${j.title}</td>
+          <td>${j.workerName||'—'}</td>
+          <td>${j.customerName||'—'}</td>
+          <td style="font-family:var(--mono);font-weight:600;color:var(--green)">PKR ${Number(j.budget).toLocaleString()}</td>
+          <td style="font-size:11px;color:var(--muted)">${fmtDate(j.created_at)}</td>
+        </tr>`).join('');
+    }
+
+    // ── SEARCH ──
+    function filterWorkers(q){q=q.toLowerCase();renderWorkers(allWorkers.filter(w=>w.fullName.toLowerCase().includes(q)||(w.skill||'').toLowerCase().includes(q)||(w.city||'').toLowerCase().includes(q)||w.phone.includes(q)))}
+    function filterCustomers(q){q=q.toLowerCase();renderCustomers(allCustomers.filter(c=>c.fullName.toLowerCase().includes(q)||(c.city||'').toLowerCase().includes(q)||c.phone.includes(q)||c.cnic.includes(q)))}
+    function filterJobs(q){q=q.toLowerCase();renderJobs(allJobs.filter(j=>j.title.toLowerCase().includes(q)||(j.location||'').toLowerCase().includes(q)||(j.customerName||'').toLowerCase().includes(q)))}
+
+    // ── VIEW WORKER ──
+    async function viewWorker(id){
+      openModal('worker-modal');
+      document.getElementById('worker-modal-body').innerHTML='<div class="loading"><span class="spinner"></span>Loading...</div>';
+      try{
+        const r=await fetch(BASE+'/api/worker/'+id);
+        const w=await r.json();
+        document.getElementById('worker-modal-body').innerHTML=`
+          <div class="modal-profile">
+            ${w.profilePic?`<img class="modal-avatar" src="data:image/jpeg;base64,${w.profilePic}"/>`:`<div class="modal-avatar">${w.fullName.charAt(0).toUpperCase()}</div>`}
+            <div>
+              <div class="modal-name">${w.fullName}</div>
+              <div class="modal-meta">${w.skill||'Worker'} • ${w.city||'N/A'}</div>
+              <div style="margin-top:8px"><span class="badge ${w.worker_form_completed?'green':'amber'}">${w.worker_form_completed?'✓ Verified':'⏳ Pending'}</span></div>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-item"><label>Full Name</label><span>${w.fullName}</span></div>
+            <div class="detail-item"><label>Phone</label><span>${w.phone}</span></div>
+            <div class="detail-item"><label>CNIC</label><span>${w.cnic}</span></div>
+            <div class="detail-item"><label>City</label><span>${w.city||'—'}</span></div>
+            <div class="detail-item"><label>Skill</label><span>${w.skill||'—'}</span></div>
+            <div class="detail-item"><label>Availability</label><span>${w.availableHours||'—'}</span></div>
+            <div class="detail-item"><label>Registered</label><span>${fmtDate(w.created_at)}</span></div>
+            <div class="detail-item"><label>Worker ID</label><span>#${w.id}</span></div>
+            ${w.about?`<div class="detail-item detail-full"><label>About</label><span>${w.about}</span></div>`:''}
+          </div>
+          <div style="margin-top:20px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Documents</div>
+          <div class="doc-grid">
+            ${docImg('CNIC Front',w.cnicFront)}
+            ${docImg('CNIC Back',w.cnicBack)}
+            ${docImg('Work Certificate',w.workCert)}
+            ${docImg('License Front',w.license)}
+            ${docImg('License Back',w.licenseBack)}
+          </div>`;
+        document.getElementById('worker-modal-footer').innerHTML=`
+          <button class="btn btn-verify" onclick="toggleVerify(${w.id},${w.worker_form_completed?1:0});closeModal('worker-modal')">${w.worker_form_completed?'🔒 Unverify':'✓ Verify'}</button>
+          <button class="btn btn-del" onclick="closeModal('worker-modal');confirmDelete('worker',${w.id},'${esc(w.fullName)}')">🗑 Delete Worker</button>`;
+      }catch(e){document.getElementById('worker-modal-body').innerHTML='<div class="empty"><p>Failed to load profile.</p></div>'}
+    }
+
+    // ── VIEW CUSTOMER ──
+    async function viewCustomer(id){
+      openModal('customer-modal');
+      document.getElementById('customer-modal-body').innerHTML='<div class="loading"><span class="spinner"></span>Loading...</div>';
+      try{
+        const r=await fetch(BASE+'/api/customer/'+id);
+        const c=await r.json();
+        const custJobs=allJobs.filter(j=>j.customer_id===c.id).length;
+        document.getElementById('customer-modal-body').innerHTML=`
+          <div class="modal-profile">
+            ${c.profilePic?`<img class="modal-avatar" src="data:image/jpeg;base64,${c.profilePic}"/>`:`<div class="modal-avatar">${c.fullName.charAt(0).toUpperCase()}</div>`}
+            <div>
+              <div class="modal-name">${c.fullName}</div>
+              <div class="modal-meta">${c.city||'N/A'} • ${c.phone}</div>
+              <div style="margin-top:8px">
+                <span class="badge blue">Customer</span>
+                <span class="badge amber" style="margin-left:6px">${custJobs} Jobs Posted</span>
+              </div>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-item"><label>Full Name</label><span>${c.fullName}</span></div>
+            <div class="detail-item"><label>Phone</label><span>${c.phone}</span></div>
+            <div class="detail-item"><label>CNIC</label><span>${c.cnic}</span></div>
+            <div class="detail-item"><label>City</label><span>${c.city||'—'}</span></div>
+            <div class="detail-item"><label>Customer ID</label><span>#${c.id}</span></div>
+            <div class="detail-item"><label>Registered</label><span>${fmtDate(c.created_at)}</span></div>
+          </div>
+          <div style="margin-top:20px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Documents</div>
+          <div class="doc-grid">
+            ${docImg('CNIC Front',c.cnicFront)}
+            ${docImg('CNIC Back',c.cnicBack)}
+            ${docImg('Profile Picture',c.profilePic)}
+          </div>`;
+        document.getElementById('customer-modal-footer').innerHTML=`
+          <button class="btn btn-del" onclick="closeModal('customer-modal');confirmDelete('customer',${c.id},'${esc(c.fullName)}')">🗑 Delete Customer</button>`;
+      }catch(e){document.getElementById('customer-modal-body').innerHTML='<div class="empty"><p>Failed to load profile.</p></div>'}
+    }
+
+    function docImg(label,b64){
+      return`<div class="doc-item">
+        <label>${label}</label>
+        ${b64
+          ?`<img src="data:image/jpeg;base64,${b64}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:1px solid var(--border)"/>`
+          :`<div class="doc-placeholder">Not uploaded</div>`}
+      </div>`;
+    }
+
+    // ── VERIFY TOGGLE ──
+    async function toggleVerify(id,current){
+      try{
+        const r=await fetch(`${API}/worker/${id}/verify`,{
+          method:'PUT',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({verified:current?0:1})
+        });
+        if(r.ok){
+          showToast(current?'Worker unverified':'Worker verified ✓','success');
+          await loadWorkers();
+          renderDashboard();
+        }else{showToast('Failed to update','error')}
+      }catch(e){showToast('Network error','error')}
+    }
+
+    // ── DELETE ──
+    let pendingDelete=null;
+    function confirmDelete(type,id,name){
+      pendingDelete={type,id};
+      document.getElementById('confirm-msg').textContent=`Delete ${type} "${name}"? This cannot be undone.`;
+      document.getElementById('confirm-dialog').classList.add('open');
+      document.getElementById('confirm-ok').onclick=executeDelete;
+    }
+    function closeConfirm(){document.getElementById('confirm-dialog').classList.remove('open');pendingDelete=null}
+    async function executeDelete(){
+      if(!pendingDelete)return;
+      const{type,id}=pendingDelete;
+      closeConfirm();
+      try{
+        const r=await fetch(`${API}/${type}/${id}`,{method:'DELETE'});
+        if(r.ok){
+          showToast(`${type.charAt(0).toUpperCase()+type.slice(1)} deleted`,'success');
+          if(type==='worker')await loadWorkers();
+          else if(type==='customer')await loadCustomers();
+          else await loadJobs();
+          renderDashboard();
+          renderEarnings();
+        }else{showToast('Delete failed','error')}
+      }catch(e){showToast('Network error','error')}
+    }
+
+    // ── MODALS ──
+    function openModal(id){document.getElementById(id).classList.add('open')}
+    function closeModal(id){document.getElementById(id).classList.remove('open')}
+    document.querySelectorAll('.modal-overlay').forEach(el=>{
+      el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open')})
+    });
+
+    // ── TOAST ──
+    function showToast(msg,type='success'){
+      const t=document.getElementById('toast');
+      t.textContent=(type==='success'?'✅ ':'❌ ')+msg;
+      t.className=`toast ${type} show`;
+      setTimeout(()=>t.classList.remove('show'),3000);
+    }
+
+    // ── HELPERS ──
+    function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'})}
+    function esc(s){return(s||'').replace(/'/g,"\\'")}
+</script>
+</body>
+</html>
