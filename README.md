@@ -392,7 +392,7 @@ Worker Dashboard          Customer Dashboard
 
 ## 👥 Developer
 
-**Tehmeena Akhtar**
+**Tehmeena Akhtar**<\n>
 **Faiza Fatima**
 
 
