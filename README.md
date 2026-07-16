@@ -392,8 +392,8 @@ Worker Dashboard          Customer Dashboard
 
 ## 👥 Developer
 
-**Tehmeena Akhtar**  
-**Faiza Fatima**
+- **Tehmeena Akhtar** – [GitHub Profile](https://github.com/TehmeenaAkhtar)
+- **Faiza Fatima** – [GitHub Profile](https://github.com/Faiza2850)
 
 
 ## 🙏 Acknowledgements
